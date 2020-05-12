@@ -74,7 +74,7 @@ ArControllerComponent.prototype.startAR = function() {
     var self = null;
 
 
-    var texture = undefined;
+    //var texture = undefined;
     //basic shader
     //create basic matrices for cameras and transformation
     var proj = mat4.create();
@@ -84,8 +84,7 @@ ArControllerComponent.prototype.startAR = function() {
     var temp = mat4.create();
 
     //get mouse actions
-                  //set the camera position
-
+    //set the camera position
 
     //basic phong shader
     var shader = new Shader('\
@@ -119,142 +118,135 @@ ArControllerComponent.prototype.startAR = function() {
 
     this.running = true;
     let scene = LS.GlobalScene;
-    var maxARVideoSize = 320;
+    //var maxARVideoSize = 320;
     // Read the marker-root from the LiteScene
-
-    this._video = ARController.getUserMedia({
-        facing: "environment",
-        onSuccess: function(stream) {
-            console.log('got video', stream);
-            this.cameraPara = new ARCameraParam(this.cameraCalibrationFile);
-            this.cameraPara.onload = async function(param) {
-                var maxSize = maxARVideoSize || Math.max(stream.videoWidth, stream.videoHeight);
-        				var f = maxSize / Math.max(stream.videoWidth, stream.videoHeight);
-        				var w = f * stream.videoWidth;
-        				var h = f * stream.videoHeight;
-        				if (stream.videoWidth < stream.videoHeight) {
-        					var tmp = w;
-        					w = h;
-        					h = tmp;
-        				}
-                var scale = 1;
-                var mesh = GL.Mesh.plane({xy: true,width: stream.videoWidth,height:stream.videoHeight});
-                var type = gl.HIGH_PRECISION_FORMAT;
-                this.arController = new ARController(w, h, this.cameraPara);
-                this.arController.image = stream;
-
-                // we are excluding this at the moment - will be fixed
-                //this.arController.setDefaultMarkerWidth(this.defaultMarkerWidth);
-
-                // FIXME: In Player-Mode the detection Mode is undefined
-                this.arController.setPatternDetectionMode( (this.trackableDetectionMode || 3) );
-
-                // Add an event listener to listen to getMarker events on the ARController.
-                // Whenever ARController#process detects a marker, it fires a getMarker event
-                // with the marker details.
-                this.arController.addEventListener('getMarker',this.onTrackableFound.bind(this));
-                this.arController.addEventListener('getNFTMarker',this.onTrackableFound.bind(this));
-
-                this._arTrackable2DList.forEach(trackable2D => {
-                    if(trackable2D._trackableType === trackable2D.trackableTypes[1])
-                    {
-                        this.arController.loadMarker(trackable2D.trackablePath, function(markerId) {
-                            console.log("Register trackable - Pattern");
-                            trackable2D.trackableId = markerId;
-                        });
-                    }
-                    else if(trackable2D._trackableType === trackable2D.trackableTypes[2])
-                    {
-                        this.arController.loadNFTMarker(trackable2D.trackablePathNft, function(markerId) {
-                            console.log("Register trackable - NFT with id", markerId);
-                            trackable2D.trackableId = markerId;
-                        });
-                    }
-                });
-
-                const sceneRoot = LS.GlobalScene.root;
-
-                //Add the AR-Camera to the scene
-                this.arCameraNode = new LS.SceneNode(ArControllerComponent.arCameraName);
-                this.arCamera = new LS.Camera();
-                this.arCamera.background_color=[0, 0, 0, 0];
-                this.arCamera.clear_color = true; //We must clear buffer from first camera.
-                this.arCameraNode.addComponent(this.arCamera);
-
-                self = this;
-                sceneRoot.addChild(this.arCameraNode, 0);
-                LS.GlobalScene.root.getComponent(LS.Camera).background_color=[0, 0, 0, 0];
-                this._setupCameraForScreenOrientation(screen.orientation.type);
-
-                // On each frame, detect markers, update their positions and
-                // render the frame on the renderer.
-                texture = Texture.fromVideo(stream,{minFilter: gl.NEAREST});
-                var tick = function() {
-                    if(!this.running)
-                        return;
-
-                   requestAnimationFrame(tick);
-                 if (texture){
-                  gl.clearColor(0.1,0.1,0.1,1);
-		              gl.enable( gl.DEPTH_TEST );
-                  texture.uploadImage(stream );
-
-                    mat4.multiply(mvp,this.arCamera.getViewProjectionMatrix(),model);
-                    var translation = vec3.create();
-                    vec3.set (translation, 0, 0 ,-580);
-                    mat4.translate (mvp, mvp, translation);
-
-                    //compute rotation matrix for normals
-                    texture.bind(0);
-
-                    //render mesh using the shader
-
-                    shader.uniforms({
-                      u_color: [1,1,1,1],
-                      u_model: model,
-                      u_texture: 0,
-                      u_mvp: mvp
-                    }).draw(mesh);
-
-                  }
-                    // Hide the marker, as we don't know if it's visible in this frame.
-                    for (var trackable2D of this._arTrackable2DList){
-                        trackable2D._previousState = trackable2D._currentState;
-                        trackable2D._currentState = undefined;
-                    }
-
-                    // Process detects markers in the video frame and sends
-                    // getMarker events to the event listeners.
-                    // adjust to 16 fps
-                    if (Math.abs(this.time-new Date().getTime())>60)
-                      {
-                        this.time = new Date().getTime();
-                        // If after the processing trackable2D.currentState is still undefined and the previous state wasn't undefined we assume that the marker was not visible within that frame
-                        this._arTrackable2DList.forEach(arTrackable => {
-                            if( arTrackable._currentState === undefined){
-                                arTrackable.visible = false;
-                            }
-                        });
-                        this.arController.process(this._video);
-
-                      }
-
-
-
-                    // Render the updated scene.
-                    LS.GlobalScene.refresh();
-                    //renderer.render(scene, camera);
-                }.bind(this);
-                tick();
-
-            }.bind(this);
-        }.bind(this)
-    });
-
+    this._video = this.getUserMedia()
 };
 
 
 
+
+ArControllerComponent.prototype.getUserMedia = async function() {
+  const constraints = {
+    audio: false,
+    video: {
+      facingMode: "environment",
+      width: 640,
+      height: 480
+    }
+  };
+
+  var texture = undefined;
+  var video = document.createElement('video');
+  const stream = await navigator.mediaDevices.getUserMedia(constraints);
+  video.srcObject = stream;
+  console.log('got video', stream);
+
+  var maxARVideoSize = 320;
+  var maxSize = maxARVideoSize || Math.max(stream.videoWidth, stream.videoHeight);
+  var f = maxSize / Math.max(stream.videoWidth, stream.videoHeight);
+  var w = f * stream.videoWidth;
+  var h = f * stream.videoHeight;
+  if (stream.videoWidth < stream.videoHeight) {
+    var tmp = w;
+    w = h;
+    h = tmp;
+  }
+  var scale = 1;
+  var mesh = GL.Mesh.plane({xy: true,width: stream.videoWidth,height:stream.videoHeight});
+  var type = gl.HIGH_PRECISION_FORMAT;
+
+  window.addEventListener('getDataFromWorker', this.onTrackableNFTFound.bind(this));
+
+  this._arTrackable2DList.forEach(trackable2D => {
+      if(trackable2D._trackableType === trackable2D.trackableTypes[2])
+      {
+          startWorker(trackable2D.trackablePathNft, stream, w, h);
+      }
+  });
+
+  const sceneRoot = LS.GlobalScene.root;
+
+  //Add the AR-Camera to the scene
+  this.arCameraNode = new LS.SceneNode(ArControllerComponent.arCameraName);
+  this.arCamera = new LS.Camera();
+  this.arCamera.background_color=[0, 0, 0, 0];
+  this.arCamera.clear_color = true; //We must clear buffer from first camera.
+  this.arCameraNode.addComponent(this.arCamera);
+
+  self = this;
+  sceneRoot.addChild(this.arCameraNode, 0);
+  LS.GlobalScene.root.getComponent(LS.Camera).background_color=[0, 0, 0, 0];
+  this._setupCameraForScreenOrientation(screen.orientation.type);
+
+  // On each frame, detect markers, update their positions and
+  // render the frame on the renderer.
+  texture = Texture.fromVideo(stream,{minFilter: gl.NEAREST});
+  var tick = function() {
+      if(!this.running)
+          return;
+
+     requestAnimationFrame(tick);
+   if (texture){
+    gl.clearColor(0.1,0.1,0.1,1);
+    gl.enable( gl.DEPTH_TEST );
+    texture.uploadImage(stream );
+
+      mat4.multiply(mvp,this.arCamera.getViewProjectionMatrix(),model);
+      var translation = vec3.create();
+      vec3.set (translation, 0, 0 ,-580);
+      mat4.translate (mvp, mvp, translation);
+
+      //compute rotation matrix for normals
+      texture.bind(0);
+
+      //render mesh using the shader
+
+      shader.uniforms({
+        u_color: [1,1,1,1],
+        u_model: model,
+        u_texture: 0,
+        u_mvp: mvp
+      }).draw(mesh);
+
+    }
+      // Hide the marker, as we don't know if it's visible in this frame.
+      for (var trackable2D of this._arTrackable2DList){
+          trackable2D._previousState = trackable2D._currentState;
+          trackable2D._currentState = undefined;
+      }
+
+      // Process detects markers in the video frame and sends
+      // getMarker events to the event listeners.
+      // adjust to 16 fps
+      if (Math.abs(this.time-new Date().getTime())>60)
+        {
+          this.time = new Date().getTime();
+          // If after the processing trackable2D.currentState is still undefined and the previous state wasn't undefined we assume that the marker was not visible within that frame
+          this._arTrackable2DList.forEach(arTrackable => {
+              if( arTrackable._currentState === undefined){
+                  arTrackable.visible = false;
+              }
+          });
+          //this.arController.process(this._video);
+
+        }
+
+
+
+      // Render the updated scene.
+      LS.GlobalScene.refresh();
+      //renderer.render(scene, camera);
+  }.bind(this);
+  tick();
+
+  return new Promise(resolve => {
+    video.onloadedmetadata = () => {
+      resolve(video);
+    };
+  });
+
+}
 
 ArControllerComponent.prototype.stopAR = function(){
     console.log("Stop AR");
@@ -347,6 +339,39 @@ ArControllerComponent.prototype.onTrackableFound = function (ev){
         });
     }
 };
+
+ArControllerComponent.prototype.onTrackableNFTFound = function (ev){
+  const markerIndex = ev.detail.data.index;
+  const markerType = ev.detail.data.type;
+  const marker = ev.detail.data.marker;
+
+  if (ev.detail.data.type === 2) {
+    trackableId = ev.detail.data.marker.id;
+  }
+  if (trackableId !== -1) {
+      console.log("saw a trackable with id", trackableId);
+
+      let markerRoot = arTrackable.attachedGameObject;
+      arTrackable.visible = true;
+      console.log("visible")
+      // Note that you need to copy the values of the transformation matrix,
+      // as the event transformation matrix is reused for each marker event
+      // sent by an ARController.
+      var transform = ev.detail.data.matrix;
+      // console.log(transform);
+
+      // Apply transform to marker root
+
+      let cameraGlobalMatrix = this.arCameraNode.transform.getGlobalMatrix();
+      let markerRootMatrix = mat4.create();
+      mat4.multiply(markerRootMatrix, cameraGlobalMatrix, transform);
+      let outQuat = quat.create();
+      quat.fromMat4(outQuat,markerRootMatrix);
+      outQuat[0]*=-1;
+      markerRoot.transform.setPosition(vec3.fromValues(markerRootMatrix[12],markerRootMatrix[13]*-1,markerRootMatrix[14]*-1));
+      markerRoot.transform.setRotation(outQuat);
+    }
+}
 
 ArControllerComponent.prototype._setupCameraForScreenOrientation = function (orientation) {
 
