@@ -195,7 +195,7 @@ ArControllerComponent.prototype.getUserMedia = async function() {
         gl.enable( gl.DEPTH_TEST );
         texture.uploadImage(video);
 
-        mat4.multiply(mvp,this.arCamera.getViewProjectionMatrix(),model);
+        mat4.multiply(mvp,self.arCamera.getViewProjectionMatrix(),model);
         var translation = vec3.create();
         vec3.set (translation, 0, 0 ,-580);
         mat4.translate (mvp, mvp, translation);
@@ -213,7 +213,7 @@ ArControllerComponent.prototype.getUserMedia = async function() {
         }).draw(mesh);
       }
       // Hide the marker, as we don't know if it's visible in this frame.
-      for (var trackable2D of this._arTrackable2DList){
+      for (var trackable2D of self._arTrackable2DList){
           trackable2D._previousState = trackable2D._currentState;
           trackable2D._currentState = undefined;
       }
@@ -221,11 +221,11 @@ ArControllerComponent.prototype.getUserMedia = async function() {
       // Process detects markers in the video frame and sends
       // getMarker events to the event listeners.
       // adjust to 16 fps
-      if (Math.abs(this.time-new Date().getTime())>60)
+      if (Math.abs(self.time-new Date().getTime())>60)
         {
-          this.time = new Date().getTime();
+          self.time = new Date().getTime();
           // If after the processing trackable2D.currentState is still undefined and the previous state wasn't undefined we assume that the marker was not visible within that frame
-          this._arTrackable2DList.forEach(arTrackable => {
+          self._arTrackable2DList.forEach(arTrackable => {
               if( arTrackable._currentState === undefined){
                   arTrackable.visible = false;
               }
