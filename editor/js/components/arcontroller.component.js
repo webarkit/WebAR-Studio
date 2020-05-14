@@ -121,6 +121,7 @@ ArControllerComponent.prototype.startAR = function() {
     //var maxARVideoSize = 320;
     // Read the marker-root from the LiteScene
     this._video = this.getUserMedia()
+    window.addEventListener('getDataFromWorker', this.onTrackableNFTFound.bind(this));
 };
 
 
@@ -167,54 +168,50 @@ ArControllerComponent.prototype.getUserMedia = async function() {
             startWorker(trackable2D.trackablePathNft, video, w, h);
         }
     });
-  } // end of load video
 
-  window.addEventListener('getDataFromWorker', this.onTrackableNFTFound.bind(this));
+    const sceneRoot = LS.GlobalScene.root;
 
-  const sceneRoot = LS.GlobalScene.root;
+    //Add the AR-Camera to the scene
+    self.arCameraNode = new LS.SceneNode(ArControllerComponent.arCameraName);
+    self.arCamera = new LS.Camera();
+    self.arCamera.background_color=[0, 0, 0, 0];
+    self.arCamera.clear_color = true; //We must clear buffer from first camera.
+    self.arCameraNode.addComponent(self.arCamera);
 
-  //Add the AR-Camera to the scene
-  this.arCameraNode = new LS.SceneNode(ArControllerComponent.arCameraName);
-  this.arCamera = new LS.Camera();
-  this.arCamera.background_color=[0, 0, 0, 0];
-  this.arCamera.clear_color = true; //We must clear buffer from first camera.
-  this.arCameraNode.addComponent(this.arCamera);
+    sceneRoot.addChild(self.arCameraNode, 0);
+    LS.GlobalScene.root.getComponent(LS.Camera).background_color=[0, 0, 0, 0];
+    self._setupCameraForScreenOrientation(screen.orientation.type);
 
-  sceneRoot.addChild(this.arCameraNode, 0);
-  LS.GlobalScene.root.getComponent(LS.Camera).background_color=[0, 0, 0, 0];
-  this._setupCameraForScreenOrientation(screen.orientation.type);
-
-  // On each frame, detect markers, update their positions and
-  // render the frame on the renderer.
-  texture = Texture.fromVideo(video,{minFilter: gl.NEAREST});
-  var tick = function() {
+    // On each frame, detect markers, update their positions and
+    // render the frame on the renderer.
+    texture = Texture.fromVideo(video,{minFilter: gl.NEAREST});
+    var tick = function() {
       if(!this.running)
           return;
 
-     requestAnimationFrame(tick);
-   if (texture){
-    gl.clearColor(0.1,0.1,0.1,1);
-    gl.enable( gl.DEPTH_TEST );
-    texture.uploadImage(video);
+      requestAnimationFrame(tick);
+      if (texture){
+        gl.clearColor(0.1,0.1,0.1,1);
+        gl.enable( gl.DEPTH_TEST );
+        texture.uploadImage(video);
 
-      mat4.multiply(mvp,this.arCamera.getViewProjectionMatrix(),model);
-      var translation = vec3.create();
-      vec3.set (translation, 0, 0 ,-580);
-      mat4.translate (mvp, mvp, translation);
+        mat4.multiply(mvp,this.arCamera.getViewProjectionMatrix(),model);
+        var translation = vec3.create();
+        vec3.set (translation, 0, 0 ,-580);
+        mat4.translate (mvp, mvp, translation);
 
-      //compute rotation matrix for normals
-      texture.bind(0);
+        //compute rotation matrix for normals
+        texture.bind(0);
 
-      //render mesh using the shader
+        //render mesh using the shader
 
-      shader.uniforms({
-        u_color: [1,1,1,1],
-        u_model: model,
-        u_texture: 0,
-        u_mvp: mvp
-      }).draw(mesh);
-
-    }
+        shader.uniforms({
+          u_color: [1,1,1,1],
+          u_model: model,
+          u_texture: 0,
+          u_mvp: mvp
+        }).draw(mesh);
+      }
       // Hide the marker, as we don't know if it's visible in this frame.
       for (var trackable2D of this._arTrackable2DList){
           trackable2D._previousState = trackable2D._currentState;
@@ -241,9 +238,9 @@ ArControllerComponent.prototype.getUserMedia = async function() {
       // Render the updated scene.
       LS.GlobalScene.refresh();
       //renderer.render(scene, camera);
-  }.bind(this);
-  tick();
-
+    }.bind(this);
+    tick();
+  } // end of load video
   return video;
 }
 
