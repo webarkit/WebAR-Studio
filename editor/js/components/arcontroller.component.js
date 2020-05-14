@@ -127,6 +127,7 @@ ArControllerComponent.prototype.startAR = function() {
 
 
 ArControllerComponent.prototype.getUserMedia = async function() {
+  self = this;
   const constraints = {
     audio: false,
     video: {
@@ -140,30 +141,35 @@ ArControllerComponent.prototype.getUserMedia = async function() {
   var video = document.createElement('video');
   const stream = await navigator.mediaDevices.getUserMedia(constraints);
   video.srcObject = stream;
-  console.log('got video', stream);
+  video.autoplay = true;
+  video.playsInline = true;
+  console.log('got video', video);
 
-  var maxARVideoSize = 320;
-  var maxSize = maxARVideoSize || Math.max(stream.videoWidth, stream.videoHeight);
-  var f = maxSize / Math.max(stream.videoWidth, stream.videoHeight);
-  var w = f * stream.videoWidth;
-  var h = f * stream.videoHeight;
-  if (stream.videoWidth < stream.videoHeight) {
-    var tmp = w;
-    w = h;
-    h = tmp;
-  }
-  var scale = 1;
-  var mesh = GL.Mesh.plane({xy: true,width: stream.videoWidth,height:stream.videoHeight});
-  var type = gl.HIGH_PRECISION_FORMAT;
+  video.onloadedmetadata = function() {
+    var maxARVideoSize = 320;
+    var maxSize = maxARVideoSize || Math.max(video.videoWidth, video.videoHeight);
+    var f = maxSize / Math.max(video.videoWidth, video.videoHeight);
+    var w = f * video.videoWidth;
+    var h = f * video.videoHeight;
+    if (video.videoWidth < video.videoHeight) {
+      var tmp = w;
+      w = h;
+      h = tmp;
+    }
+
+    var scale = 1;
+    var mesh = GL.Mesh.plane({xy: true,width: video.videoWidth,height:video.videoHeight});
+    var type = gl.HIGH_PRECISION_FORMAT;
+
+    self._arTrackable2DList.forEach(trackable2D => {
+        if(trackable2D._trackableType === trackable2D.trackableTypes[2])
+        {
+            startWorker(trackable2D.trackablePathNft, video, w, h);
+        }
+    });
+  } // end of load video
 
   window.addEventListener('getDataFromWorker', this.onTrackableNFTFound.bind(this));
-
-  this._arTrackable2DList.forEach(trackable2D => {
-      if(trackable2D._trackableType === trackable2D.trackableTypes[2])
-      {
-          startWorker(trackable2D.trackablePathNft, stream, w, h);
-      }
-  });
 
   const sceneRoot = LS.GlobalScene.root;
 
@@ -174,14 +180,13 @@ ArControllerComponent.prototype.getUserMedia = async function() {
   this.arCamera.clear_color = true; //We must clear buffer from first camera.
   this.arCameraNode.addComponent(this.arCamera);
 
-  self = this;
   sceneRoot.addChild(this.arCameraNode, 0);
   LS.GlobalScene.root.getComponent(LS.Camera).background_color=[0, 0, 0, 0];
   this._setupCameraForScreenOrientation(screen.orientation.type);
 
   // On each frame, detect markers, update their positions and
   // render the frame on the renderer.
-  texture = Texture.fromVideo(stream,{minFilter: gl.NEAREST});
+  texture = Texture.fromVideo(video,{minFilter: gl.NEAREST});
   var tick = function() {
       if(!this.running)
           return;
@@ -190,7 +195,7 @@ ArControllerComponent.prototype.getUserMedia = async function() {
    if (texture){
     gl.clearColor(0.1,0.1,0.1,1);
     gl.enable( gl.DEPTH_TEST );
-    texture.uploadImage(stream );
+    texture.uploadImage(video);
 
       mat4.multiply(mvp,this.arCamera.getViewProjectionMatrix(),model);
       var translation = vec3.create();
@@ -228,7 +233,6 @@ ArControllerComponent.prototype.getUserMedia = async function() {
                   arTrackable.visible = false;
               }
           });
-          //this.arController.process(this._video);
 
         }
 
@@ -240,12 +244,7 @@ ArControllerComponent.prototype.getUserMedia = async function() {
   }.bind(this);
   tick();
 
-  return new Promise(resolve => {
-    video.onloadedmetadata = () => {
-      resolve(video);
-    };
-  });
-
+  return video;
 }
 
 ArControllerComponent.prototype.stopAR = function(){
