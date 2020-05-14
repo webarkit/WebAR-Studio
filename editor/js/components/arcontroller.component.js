@@ -230,14 +230,9 @@ ArControllerComponent.prototype.getUserMedia = async function() {
                   arTrackable.visible = false;
               }
           });
-
         }
-
-
-
       // Render the updated scene.
       LS.GlobalScene.refresh();
-      //renderer.render(scene, camera);
     }.bind(this);
     tick();
   } // end of load video
@@ -248,7 +243,6 @@ ArControllerComponent.prototype.stopAR = function(){
     console.log("Stop AR");
     this.running = false;
     if(this._video !== undefined){
-      console.log(this._video);
       var videoElem = this._video;
       var stream = videoElem.srcObject;
       var tracks = stream.getVideoTracks();
@@ -381,9 +375,9 @@ ArControllerComponent.prototype._setupCameraForScreenOrientation = function (ori
     }
 
     if ( orientation.includes('portrait') ) {
-        this.arController.orientation = 'portrait';
-        this.arController.videoWidth = this._video.videoHeight;
-        this.arController.videoHeight = this._video.videoWidth;
+        //this.arController.orientation = 'portrait';
+        //this.arController.videoWidth = this._video.videoHeight;
+        //this.arController.videoHeight = this._video.videoWidth;
 
         // TODO once we have proper handling of calibration file we use this
         // let cameraProjectionMatrix = this.arController.getCameraMatrix();
@@ -394,7 +388,7 @@ ArControllerComponent.prototype._setupCameraForScreenOrientation = function (ori
         //mat4.rotateZ(cameraProjectionMatrix, cameraProjectionMatrix, 1.5708);       // Rotate around z by 90°
         //this.arCamera.setCustomProjectionMatrix(cameraProjectionMatrix);
     } else {
-        this.arController.orientation = 'landscape';
+        //this.arController.orientation = 'landscape';
         // this.arController.videoWidth = this._video.videoWidth;
         // this.arController.videoHeight = this._video.videoHeight;
         // // TODO: once we have proper handling of calibration file we use this
