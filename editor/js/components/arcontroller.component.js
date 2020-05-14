@@ -70,55 +70,6 @@ ArControllerComponent.prototype.onRemovedFromScene = function( scene ) {
 
 ArControllerComponent.prototype.startAR = function() {
     console.log("Start AR");
-    var self = null;
-
-
-    //var texture = undefined;
-    //basic shader
-    //create basic matrices for cameras and transformation
-    var proj = mat4.create();
-    var view = mat4.create();
-    var model = mat4.create();
-    var mvp = mat4.create();
-    var temp = mat4.create();
-
-    //get mouse actions
-    //set the camera position
-
-    //basic phong shader
-    var shader = new Shader('\
-        precision highp float;\
-        attribute vec3 a_vertex;\
-        attribute vec3 a_normal;\
-        attribute vec2 a_coord;\
-        varying vec3 v_normal;\
-        varying vec2 v_coord;\
-        uniform mat4 u_mvp;\
-        uniform mat4 u_model;\
-        void main() {\
-          v_coord = a_coord;\
-          gl_Position =u_mvp* vec4(a_vertex,1.0);\
-        }\
-        ', '\
-        precision highp float;\
-        varying vec3 v_normal;\
-        varying vec2 v_coord;\
-        uniform vec3 u_lightvector;\
-        uniform vec4 u_color;\
-        uniform sampler2D u_texture;\
-        void main() {\
-          vec4 color =  texture2D( u_texture, v_coord);\
-          gl_FragColor = color ;\
-        }\
-      ');
-
-
-    //generic gl flags and settings
-
-    this.running = true;
-    let scene = LS.GlobalScene;
-    //var maxARVideoSize = 320;
-    // Read the marker-root from the LiteScene
     this._video = this.getUserMedia()
     window.addEventListener('getDataFromWorker', this.onTrackableNFTFound.bind(this));
 };
@@ -138,6 +89,40 @@ ArControllerComponent.prototype.getUserMedia = async function() {
   };
 
   var texture = undefined;
+  //basic shader
+  //create basic matrices for cameras and transformation
+  var proj = mat4.create();
+  var view = mat4.create();
+  var model = mat4.create();
+  var mvp = mat4.create();
+  var temp = mat4.create();
+  //basic phong shader
+  var shader = new Shader('\
+      precision highp float;\
+      attribute vec3 a_vertex;\
+      attribute vec3 a_normal;\
+      attribute vec2 a_coord;\
+      varying vec3 v_normal;\
+      varying vec2 v_coord;\
+      uniform mat4 u_mvp;\
+      uniform mat4 u_model;\
+      void main() {\
+        v_coord = a_coord;\
+        gl_Position =u_mvp* vec4(a_vertex,1.0);\
+      }\
+      ', '\
+      precision highp float;\
+      varying vec3 v_normal;\
+      varying vec2 v_coord;\
+      uniform vec3 u_lightvector;\
+      uniform vec4 u_color;\
+      uniform sampler2D u_texture;\
+      void main() {\
+        vec4 color =  texture2D( u_texture, v_coord);\
+        gl_FragColor = color ;\
+      }\
+    ');
+
   var video = document.createElement('video');
   const stream = await navigator.mediaDevices.getUserMedia(constraints);
   video.srcObject = stream;
@@ -169,6 +154,8 @@ ArControllerComponent.prototype.getUserMedia = async function() {
     });
 
     const sceneRoot = LS.GlobalScene.root;
+    this.running = true;
+    let scene = LS.GlobalScene;
 
     //Add the AR-Camera to the scene
     self.arCameraNode = new LS.SceneNode(ArControllerComponent.arCameraName);
