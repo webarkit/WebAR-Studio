@@ -71,11 +71,42 @@ ArControllerComponent.prototype.onRemovedFromScene = function( scene ) {
 ArControllerComponent.prototype.startAR = function() {
     console.log("Start AR");
     this._video = this.getUserMedia()
-    window.addEventListener('getDataFromWorker', this.onTrackableNFTFound.bind(this));
+    this._arTrackable2DList.forEach(arTrackable => {
+      var self = this;
+      window.addEventListener('getDataFromWorker', function(ev) {
+
+        const markerIndex = ev.detail.data.index;
+        const markerType = ev.detail.data.type;
+        const marker = ev.detail.data.marker;
+
+        if (ev.detail.data.type === 2) {
+          trackableId = ev.detail.data.marker.id;
+        }
+        if (trackableId !== -1) {
+            console.log("saw a trackable with id", trackableId);
+
+            let markerRoot = arTrackable.attachedGameObject;
+            arTrackable.visible = true;
+            console.log("visible")
+            // Note that you need to copy the values of the transformation matrix,
+            // as the event transformation matrix is reused for each marker event
+            // sent by an ARController.
+            var transform = ev.detail.data.matrix;
+
+            // Apply transform to marker root
+
+            let cameraGlobalMatrix = self.arCameraNode.transform.getGlobalMatrix();
+            let markerRootMatrix = mat4.create();
+            mat4.multiply(markerRootMatrix, cameraGlobalMatrix, transform);
+            let outQuat = quat.create();
+            quat.fromMat4(outQuat,markerRootMatrix);
+            outQuat[0]*=-1;
+            markerRoot.transform.setPosition(vec3.fromValues(markerRootMatrix[12],markerRootMatrix[13]*-1,markerRootMatrix[14]*-1));
+            markerRoot.transform.setRotation(outQuat);
+        }
+    });
+  });
 };
-
-
-
 
 ArControllerComponent.prototype.getUserMedia = async function() {
   var self = this;
@@ -266,39 +297,6 @@ ArControllerComponent.prototype.unRegisterTrackable = function(arTrackable2D){
     const indexToRemove = this._arTrackable2DList.indexOf(arTrackable2D);
     if(indexToRemove > -1) {
         this._arTrackable2DList.splice(indexToRemove,1);
-    }
-}
-
-ArControllerComponent.prototype.onTrackableNFTFound = function (ev){
-  const markerIndex = ev.detail.data.index;
-  const markerType = ev.detail.data.type;
-  const marker = ev.detail.data.marker;
-
-  if (ev.detail.data.type === 2) {
-    trackableId = ev.detail.data.marker.id;
-  }
-  if (trackableId !== -1) {
-      console.log("saw a trackable with id", trackableId);
-
-      let markerRoot = arTrackable.attachedGameObject;
-      arTrackable.visible = true;
-      console.log("visible")
-      // Note that you need to copy the values of the transformation matrix,
-      // as the event transformation matrix is reused for each marker event
-      // sent by an ARController.
-      var transform = ev.detail.data.matrix;
-      // console.log(transform);
-
-      // Apply transform to marker root
-
-      let cameraGlobalMatrix = this.arCameraNode.transform.getGlobalMatrix();
-      let markerRootMatrix = mat4.create();
-      mat4.multiply(markerRootMatrix, cameraGlobalMatrix, transform);
-      let outQuat = quat.create();
-      quat.fromMat4(outQuat,markerRootMatrix);
-      outQuat[0]*=-1;
-      markerRoot.transform.setPosition(vec3.fromValues(markerRootMatrix[12],markerRootMatrix[13]*-1,markerRootMatrix[14]*-1));
-      markerRoot.transform.setRotation(outQuat);
     }
 }
 
