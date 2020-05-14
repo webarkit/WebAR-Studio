@@ -269,50 +269,6 @@ ArControllerComponent.prototype.unRegisterTrackable = function(arTrackable2D){
     }
 }
 
-ArControllerComponent.prototype.onTrackableFound = function (ev){
-    const markerIndex = ev.data.index;
-    const markerType = ev.data.type;
-    const marker = ev.data.marker;
-    //Look for a barcode trackable
-    let trackableId = ev.data.marker.idMatrix;
-    //Look for a pattern trackable
-    if(trackableId === undefined || trackableId < 0) {
-        trackableId = ev.data.marker.idPatt;
-    }
-
-    if (ev.data.type === 2) {
-      trackableId = ev.data.marker.id;
-    }
-
-    if (trackableId !== -1) {
-        console.log("saw a trackable with id", trackableId);
-
-        this._arTrackable2DList.forEach(arTrackable => {
-        //    if(trackableId === arTrackable.trackableId) {
-                let markerRoot = arTrackable.attachedGameObject;
-                arTrackable.visible = true;
-                console.log("visible")
-                // Note that you need to copy the values of the transformation matrix,
-                // as the event transformation matrix is reused for each marker event
-                // sent by an ARController.
-                var transform = ev.data.matrix;
-                // console.log(transform);
-
-                // Apply transform to marker root
-
-                let cameraGlobalMatrix = this.arCameraNode.transform.getGlobalMatrix();
-                let markerRootMatrix = mat4.create();
-                mat4.multiply(markerRootMatrix, cameraGlobalMatrix, transform);
-                let outQuat = quat.create();
-                quat.fromMat4(outQuat,markerRootMatrix);
-                outQuat[0]*=-1;
-                markerRoot.transform.setPosition(vec3.fromValues(markerRootMatrix[12],markerRootMatrix[13]*-1,markerRootMatrix[14]*-1));
-                markerRoot.transform.setRotation(outQuat);
-          //  } // end if(trackableId === arTrackable.trackableId)
-        });
-    }
-};
-
 ArControllerComponent.prototype.onTrackableNFTFound = function (ev){
   const markerIndex = ev.detail.data.index;
   const markerType = ev.detail.data.type;
