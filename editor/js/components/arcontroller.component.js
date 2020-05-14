@@ -10,7 +10,6 @@ function ArControllerComponent( o )
     this._visibleTrackables = [];
     this.initVideo = true;
     this.running = false;
-    this.arController = null;
     this.time = 0;
     //Square tracking options
     this.trackableDetectionModeList = {
@@ -33,10 +32,10 @@ function ArControllerComponent( o )
     window.addEventListener(this.orientationEvent, function() {
         // Also window resize events are received here. Unfortunately if we don't have a running AR scene we don't have an arController and we see errors in the log
         // because of that we check if there is an ARController object available
-        if(this.arController){
+        //if(this.arController){
             console.log("window.orientation " + window.orientation + " screen.orientation " + screen.orientation );
             this._setupCameraForScreenOrientation(screen.orientation.type);
-        }
+        //}
     }.bind(this));
 
     if(o)
@@ -128,7 +127,7 @@ ArControllerComponent.prototype.startAR = function() {
 
 
 ArControllerComponent.prototype.getUserMedia = async function() {
-  self = this;
+  var self = this;
   const constraints = {
     audio: false,
     video: {
@@ -253,11 +252,7 @@ ArControllerComponent.prototype.stopAR = function(){
       videoElem.srcObject = null;
       videoElem.src = null;
       videoElem.remove();
-      if(this.arController)
-          this.arController.dispose();
     }
-
-
 
     if(this.arCamera)
         LS.GlobalScene.root.removeChild(this.arCamera);
