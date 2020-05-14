@@ -244,14 +244,15 @@ ArControllerComponent.prototype.stopAR = function(){
     if(this._video !== undefined){
       var videoElem = this._video;
       var stream = videoElem.srcObject;
-      var tracks = stream.getVideoTracks();
-      tracks.forEach(function(track) {
-        track.stop();
-      });
-
-      videoElem.srcObject = null;
-      videoElem.src = null;
-      videoElem.remove();
+      if(stream){
+        var tracks = stream.getVideoTracks();
+        tracks.forEach(function(track) {
+          track.stop();
+        });
+        videoElem.srcObject = null;
+        videoElem.src = null;
+        videoElem.remove();
+      }
     }
 
     if(this.arCamera)
