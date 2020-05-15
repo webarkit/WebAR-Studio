@@ -38,8 +38,8 @@ function startWorker(marker, video, input_width, input_height, canvas_draw) {
 
     // create a Worker to handle loading of NFT marker and tracking of it
     const workerBlob = new Blob(
-      [embeddedWorker.toString().replace(/^function .+\{?|\}$/g, '')],
-      { type: 'text/js-worker' }
+      [embeddedWorker.toString().replace(/^function .+\{?|\}$/g, '')]
+      //{ type: 'text/js-worker' }
     )
     const workerBlobUrl = URL.createObjectURL(workerBlob)
 
@@ -95,7 +95,7 @@ function startWorker(marker, video, input_width, input_height, canvas_draw) {
       const basePath = self.origin;
       console.log(basePath);
       let artoolkitUrl, cameraParamUrl, nftMarkerUrl
-      let artoolkitPath = "js/modules/artoolkit.min.js"
+      let artoolkitPath = "js/modules/artoolkitNFT_wasm.js"
       console.debug('Base path:', basePath)
       // test if the msg.param (the incoming url) is an http or https path
       const regexA = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#()?&//=]*)/igm
@@ -103,7 +103,7 @@ function startWorker(marker, video, input_width, input_height, canvas_draw) {
       if (reA == true) {
         artoolkitUrl = artoolkitPath
       } else if (reA == false) {
-        if (basePath == 'http://127.0.0.1:3000') {
+        if (basePath == 'http://localhost:3000') {
           artoolkitUrl = basePath + '/editor/' + artoolkitPath
         } else {
           artoolkitUrl = basePath + '/' + artoolkitPath
@@ -112,10 +112,11 @@ function startWorker(marker, video, input_width, input_height, canvas_draw) {
       console.debug('Importing WASM lib from: ', artoolkitUrl)
 
       importScripts(artoolkitUrl)
+self.addEventListener('artoolkitNFT-loaded', function () {
 
       const onLoad = function () {
 
-        ar = new ARController(msg.pw, msg.ph, param);
+        ar = new ARControllerNFT(msg.pw, msg.ph, param);
 
         ar.addEventListener('getNFTMarker', function (ev) {
           markerResult = {type: "found", data: JSON.stringify(ev.data)};
@@ -127,7 +128,7 @@ function startWorker(marker, video, input_width, input_height, canvas_draw) {
         if (reM == true) {
           nftMarkerUrl = msg.marker;
         } else if (reM == false) {
-          if (basePath == 'http://127.0.0.1:3000') {
+          if (basePath == 'http://localhost:3000') {
             nftMarkerUrl = basePath + '/editor/' + msg.marker;
           } else {
             nftMarkerUrl = basePath + '/' + msg.marker;
@@ -149,7 +150,7 @@ function startWorker(marker, video, input_width, input_height, canvas_draw) {
       if (reC == true) {
         cameraParamUrl = msg.camera_para;
       } else if (reC == false) {
-        if (basePath == 'http://127.0.0.1:3000') {
+        if (basePath == 'http://localhost:3000') {
           cameraParamUrl = basePath + '/editor/' + msg.camera_para;
         } else {
           cameraParamUrl = basePath + '/' + msg.camera_para;
@@ -157,7 +158,8 @@ function startWorker(marker, video, input_width, input_height, canvas_draw) {
       }
       console.debug('Loading camera at:', cameraParamUrl);
       // we cannot pass the entire ARController, so we re-create one inside the Worker, starting from camera_param
-      const param = new ARCameraParam(cameraParamUrl, onLoad, onError);
+      const param = new ARCameraParamNFT(cameraParamUrl, onLoad, onError);
+      });//loadnft
     };
 
 

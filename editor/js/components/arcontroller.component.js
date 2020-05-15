@@ -13,14 +13,14 @@ function ArControllerComponent( o )
     this.time = 0;
     //Square tracking options
     this.trackableDetectionModeList = {
-        'Trackable square pattern (color)' : artoolkit.AR_TEMPLATE_MATCHING_COLOR,
+        /*'Trackable square pattern (color)' : artoolkit.AR_TEMPLATE_MATCHING_COLOR,
         'Trackable square pattern (mono)' : artoolkit.AR_TEMPLATE_MATCHING_MONO,
         'Trackable square barcode' : artoolkit.AR_MATRIX_CODE_DETECTION,
         'Trackable square pattern and barcode (color)' : artoolkit.AR_TEMPLATE_MATCHING_COLOR_AND_MATRIX,
-        'Trackable square pattern and barcode (mono)' : artoolkit.AR_TEMPLATE_MATCHING_MONO_AND_MATRIX
+        'Trackable square pattern and barcode (mono)' : artoolkit.AR_TEMPLATE_MATCHING_MONO_AND_MATRIX*/
     };
 
-    this.trackableDetectionMode = artoolkit.AR_TEMPLATE_MATCHING_COLOR_AND_MATRIX;
+    this.trackableDetectionMode =''; //artoolkit.AR_TEMPLATE_MATCHING_COLOR_AND_MATRIX;
 
     // Register orientation change listener to be informed on orientation change events
     // https://stackoverflow.com/questions/1649086/detect-rotation-of-android-phone-in-the-browser-with-javascript
