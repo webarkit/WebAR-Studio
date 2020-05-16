@@ -100,10 +100,10 @@ function startWorker(marker, video, input_width, input_height, canvas_draw) {
       // test if the msg.param (the incoming url) is an http or https path
       const regexA = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#()?&//=]*)/igm
       var reA = regexA.test(artoolkitPath)
-      if (reA == true) {
+      if (reA === true) {
         artoolkitUrl = artoolkitPath
-      } else if (reA == false) {
-        if (basePath == 'http://localhost:3000') {
+      } else if (reA === false) {
+        if (basePath === 'http://localhost:3000') {
           artoolkitUrl = basePath + '/editor/' + artoolkitPath
         } else {
           artoolkitUrl = basePath + '/' + artoolkitPath
@@ -112,73 +112,71 @@ function startWorker(marker, video, input_width, input_height, canvas_draw) {
       console.debug('Importing WASM lib from: ', artoolkitUrl)
 
       importScripts(artoolkitUrl)
-self.addEventListener('artoolkitNFT-loaded', function () {
+      self.addEventListener('artoolkitNFT-loaded', function () {
+        const onLoad = function () {
+          ar = new ARControllerNFT(msg.pw, msg.ph, param);
 
-      const onLoad = function () {
-
-        ar = new ARControllerNFT(msg.pw, msg.ph, param);
-
-        ar.addEventListener('getNFTMarker', function (ev) {
+          ar.addEventListener('getNFTMarker', function (ev) {
           markerResult = {type: "found", data: JSON.stringify(ev.data)};
         });
 
-        // after the ARController is set up, we load the NFT Marker
-        const regexM = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#()?&//=]*)/igm
-        var reM = regexM.test(msg.marker);
-        if (reM == true) {
+          // after the ARControllerNFT is set up, we load the NFT Marker
+          const regexM = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#()?&//=]*)/igm
+          var reM = regexM.test(msg.marker);
+          if (reM === true) {
           nftMarkerUrl = msg.marker;
-        } else if (reM == false) {
-          if (basePath == 'http://localhost:3000') {
-            nftMarkerUrl = basePath + '/editor/' + msg.marker;
+        } else if (reM === false) {
+            if (basePath === 'http://localhost:3000') {
+              nftMarkerUrl = basePath + '/editor/' + msg.marker;
+            } else {
+              nftMarkerUrl = basePath + '/' + msg.marker;
+            }
+          };
+
+          console.debug('Loading NFT marker at: ', nftMarkerUrl);
+
+          ar.loadNFTMarker(nftMarkerUrl, function (markerId) {
+            ar.trackNFTMarkerId(markerId);
+            console.log("loadNFTMarker -> ", markerId);
+          });
+        };
+        const onError = function (error) {
+            console.error(error)
+        };
+        const regexC = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#()?&//=]*)/igm;
+        const reC = regexC.test(msg.camera_para);
+        if (reC === true) {
+          cameraParamUrl = msg.camera_para;
+        } else if (reC === false) {
+          if (basePath === 'http://localhost:3000') {
+            cameraParamUrl = basePath + '/editor/' + msg.camera_para;
           } else {
-            nftMarkerUrl = basePath + '/' + msg.marker;
+            cameraParamUrl = basePath + '/' + msg.camera_para;
           }
-        };
-
-        console.debug('Loading NFT marker at: ', nftMarkerUrl);
-
-        ar.loadNFTMarker(nftMarkerUrl, function (markerId) {
-          ar.trackNFTMarkerId(markerId);
-          console.log("loadNFTMarker -> ", markerId);
-        });
-      };
-      const onError = function (error) {
-          console.error(error)
-        };
-      const regexC = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#()?&//=]*)/igm;
-      const reC = regexC.test(msg.camera_para);
-      if (reC == true) {
-        cameraParamUrl = msg.camera_para;
-      } else if (reC == false) {
-        if (basePath == 'http://localhost:3000') {
-          cameraParamUrl = basePath + '/editor/' + msg.camera_para;
-        } else {
-          cameraParamUrl = basePath + '/' + msg.camera_para;
         }
-      }
-      console.debug('Loading camera at:', cameraParamUrl);
-      // we cannot pass the entire ARController, so we re-create one inside the Worker, starting from camera_param
-      const param = new ARCameraParamNFT(cameraParamUrl, onLoad, onError);
-      });//loadnft
+        console.debug('Loading camera at:', cameraParamUrl);
+        // we cannot pass the entire ARController, so we re-create one inside the Worker, starting from camera_param
+        const param = new ARCameraParamNFT(cameraParamUrl, onLoad, onError);
+      }); // loadnft
     };
 
 
-  function process () {
-    markerResult = null;
+    function process () {
+      markerResult = null;
 
-    if (ar && ar.process) {
-      ar.process(next);
+      if (ar && ar.process) {
+        ar.process(next);
+      }
+
+      if (markerResult) {
+        postMessage(markerResult);
+      } else {
+        postMessage({type: "not found"});
+      }
+
+      next = null;
     }
-
-    if (markerResult) {
-      postMessage(markerResult);
-    } else {
-      postMessage({type: "not found"});
-    }
-
-    next = null;
-  }
-} // end of embeddedWorker() function
+  } // end of embeddedWorker() function
 
   var data;
 
