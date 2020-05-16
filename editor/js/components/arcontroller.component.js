@@ -78,10 +78,11 @@ ArControllerComponent.prototype.startAR = function() {
         const markerIndex = ev.detail.data.index;
         const markerType = ev.detail.data.type;
         const marker = ev.detail.data.marker;
+        trackableId = ev.detail.data.marker.id;
 
-        if (ev.detail.data.type === 2) {
+        /*if (ev.detail.data.type === 2) {
           trackableId = ev.detail.data.marker.id;
-        }
+        }*/
         if (trackableId !== -1) {
             console.log("saw a trackable with id", trackableId);
 
