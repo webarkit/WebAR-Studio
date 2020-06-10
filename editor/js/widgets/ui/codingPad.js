@@ -27,15 +27,6 @@ CodingPadWidget.prototype.init = function( options )
     const coding_area = this.createCodingArea();     
 
     //create the corresponding code editor in the coding area
-    if (options.editor === 'codemirror'){
-        if(typeof(CodeMirror) === "undefined") {
-            console.warn("CodeMirror missing");
-            return;
-        }
-        else 
-            this.createCodeMirrorEditor(coding_area); 
-    }
-    else if(options.editor === 'monaco'){
         if(typeof(monaco) === "undefined") {
             console.warn("Monaco-Editor library missing");
             return;
@@ -44,7 +35,6 @@ CodingPadWidget.prototype.init = function( options )
             this.createMonacoEditor(coding_area);
         // We don't do anything when the monaco editor is required because the editor itself needs to be added after the pad is added to the container
         // see codingTabsWidget.js L:481
-    }
 
 	var that = this;
 

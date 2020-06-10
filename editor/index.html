@@ -44,6 +44,15 @@
 
     <script type="text/javascript">
         CORE.init();
+        var script = document.createElement('script');
+        script.onload = function () {
+            //do stuff with the script
+            console.log('TS loaded')
+        };
+        script.src = 'js/extra/typescript.js';
+
+        document.head.appendChild(script); //or something of the likes
+
     </script>
 </body>
 </html>

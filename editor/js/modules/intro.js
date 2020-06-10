@@ -16,7 +16,7 @@ var IntroModule = {
 		var dialog = new LiteGUI.Dialog("intro_dialog",{ width: 400, height: 400, closable: true });
     dialog.content.innerHTML = ""+
     "<img src='imgs/icon200.png' style='float:left;'>"+
-    "<p class='header center'>Welcome to AR studio!</p>" +
+    "<p class='header center'>Welcome to WebAR Studio!</p>" +
     "<p class='msg left'>The editor for webAR</p>" +
     "<p class='msg left'>Design and develop your own AR scenes and share them with your audience.</p><br><br>" + 
     "<p class='msg center'>The only open-source system that supports pictures as targets</p>";
