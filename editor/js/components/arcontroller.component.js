@@ -5,6 +5,7 @@ function ArControllerComponent( o )
     this.defaultMarkerWidth = 80;
     this.cameraCalibrationFile = 'data/camera_para.dat';
     this._video = undefined;
+    this.stream = null;
     this._arTrackable2DList = [];
     this._defaultMarkerWidthUnit = 'mm';
     this._visibleTrackables = [];
@@ -159,8 +160,8 @@ ArControllerComponent.prototype.getUserMedia = async function() {
     ');
 
   var video = document.createElement('video');
-  const stream = await navigator.mediaDevices.getUserMedia(constraints);
-  video.srcObject = stream;
+  this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+  video.srcObject = this.stream;
   video.autoplay = true;
   video.playsInline = true;
   console.log('got video', video);
@@ -265,15 +266,15 @@ ArControllerComponent.prototype.stopAR = function(){
     this.running = false;
     if(this._video !== undefined){
       var videoElem = this._video;
-      var stream = videoElem.srcObject;
-      if(stream){
-        var tracks = stream.getVideoTracks();
+      if(this.stream){
+        var tracks = this.stream.getVideoTracks();
         tracks.forEach(function(track) {
           track.stop();
         });
-        videoElem.srcObject = null;
-        videoElem.src = null;
-        videoElem.remove();
+        if(this._video && this._video.srcObject) {
+          videoElem.srcObject = null;
+          videoElem.src = null;
+        }
       }
     }
 
