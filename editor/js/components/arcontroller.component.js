@@ -87,6 +87,7 @@ ArControllerComponent.prototype.startAR = function() {
             console.log("saw a trackable with id", trackableId);
 
             let markerRoot = arTrackable.attachedGameObject;
+            console.log(markerRoot.childNodes[0].transform.position);
             arTrackable.visible = true;
             console.log("visible")
             // Note that you need to copy the values of the transformation matrix,
@@ -102,8 +103,10 @@ ArControllerComponent.prototype.startAR = function() {
             let outQuat = quat.create();
             quat.fromMat4(outQuat,markerRootMatrix);
             outQuat[0]*=-1;
-            markerRoot.transform.setPosition(vec3.fromValues(markerRootMatrix[12],markerRootMatrix[13]*-1,markerRootMatrix[14]*-1));
-            markerRoot.transform.setRotation(outQuat);
+            //markerRoot.transform.setPosition(vec3.fromValues(markerRootMatrix[12],markerRootMatrix[13]*-1,markerRootMatrix[14]*-1));
+            markerRoot.childNodes[0].transform.position = [markerRootMatrix[12],markerRootMatrix[13]*-1,markerRootMatrix[14]*-1];
+            //markerRoot.transform.setRotation(outQuat);
+            markerRoot.childNodes[0].transform.rotation = outQuat;
         }
     });
   });
